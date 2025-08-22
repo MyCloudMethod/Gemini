@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini 2.5 Pro - Interface Clone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .gemini-gradient-text {
+            background: -webkit-linear-gradient(45deg, #4285F4, #9B72CB, #D96570, #F2A60C);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #4285F4;
+            width: 30px;
+            height: 30px;
+            -webkit-animation: spin 2s linear infinite; /* Safari */
+            animation: spin 2s linear infinite;
+        }
+        #chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        #chat-container::-webkit-scrollbar-thumb {
+            background-color: #4a5568;
+            border-radius: 3px;
+        }
+        #chat-container::-webkit-scrollbar-track {
+            background-color: #1a202c;
+        }
+
+        /* Safari */
+        @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex flex-col h-screen">
+
+    <!-- Header -->
+    <header class="flex justify-between items-center p-4 border-b border-gray-700 flex-shrink-0">
+        <div class="flex items-center space-x-3">
+            <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2.25C6.071 2.25 1.5 6.821 1.5 12.75C1.5 18.679 6.071 23.25 12 23.25C17.929 23.25 22.5 18.679 22.5 12.75C22.5 6.821 17.929 2.25 12 2.25ZM12 20.25C7.998 20.25 4.5 16.752 4.5 12.75C4.5 8.748 7.998 5.25 12 5.25C16.002 5.25 19.5 8.748 19.5 12.75C19.5 16.752 16.002 20.25 12 20.25Z" fill="url(#paint0_linear_1_2)"/>
+                <path d="M12 7.5C9.243 7.5 7.5 9.743 7.5 12.5C7.5 15.257 9.243 17.5 12 17.5C14.757 17.5 16.5 15.257 16.5 12.5C16.5 9.743 14.757 7.5 12 7.5Z" fill="url(#paint1_linear_1_2)"/>
+                <defs>
+                <linearGradient id="paint0_linear_1_2" x1="1.5" y1="12.75" x2="22.5" y2="12.75" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#4285F4"/>
+                <stop offset="1" stop-color="#9B72CB"/>
+                </linearGradient>
+                <linearGradient id="paint1_linear_1_2" x1="7.5" y1="12.5" x2="16.5" y2="12.5" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#D96570"/>
+                <stop offset="1" stop-color="#F2A60C"/>
+                </linearGradient>
+                </defs>
+            </svg>
+            <h1 class="text-xl font-semibold gemini-gradient-text">Gemini 2.5 Pro</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <button id="newChatButton" class="bg-gray-800 hover:bg-gray-700 p-2 rounded-full" title="New Chat">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+            </button>
+            <img src="https://placehold.co/32x32/7E57C2/FFFFFF?text=U" alt="User Avatar" class="rounded-full">
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 overflow-y-auto" id="chat-container">
+        <!-- Welcome Message -->
+         <div id="welcome-message" class="max-w-3xl mx-auto text-center py-16">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                <span class="gemini-gradient-text">Hello, I'm Gemini 2.5 Pro</span>
+            </h2>
+            <p class="text-gray-400 text-lg">How can I help you today?</p>
+        </div>
+        <!-- This is where chat messages will be appended -->
+    </main>
+
+    <!-- Input Area -->
+    <footer class="p-4 border-t border-gray-700 flex-shrink-0">
+        <div class="max-w-3xl mx-auto">
+            <div id="suggested-prompts" class="flex flex-wrap justify-center gap-2 mb-3"></div>
+            <div class="bg-gray-800 rounded-full flex items-center p-2">
+                <button id="suggestPromptsButton" class="p-2 rounded-full hover:bg-gray-700" title="Suggest Prompts">
+                    <span class="text-xl">✨</span>
+                </button>
+                <input type="text" id="userInput" placeholder="Message Gemini 2.5 Pro..." class="flex-1 bg-transparent text-white placeholder-gray-500 focus:outline-none px-4">
+                <button class="p-2 rounded-full hover:bg-gray-700" title="Attach file (dummy)">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.414a4 4 0 00-5.656-5.656l-6.415 6.415a6 6 0 108.486 8.486L20.5 13" />
+                    </svg>
+                </button>
+                <button id="sendButton" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full ml-2" title="Send Message">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                </button>
+            </div>
+            <p class="text-xs text-gray-500 text-center mt-2">
+                Gemini may display inaccurate info, including about people, so double-check its responses. 
+                <a href="#" class="underline">Your privacy and Gemini Apps</a>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+        const chatContainer = document.getElementById('chat-container');
+        const suggestPromptsButton = document.getElementById('suggestPromptsButton');
+        const suggestedPromptsContainer = document.getElementById('suggested-prompts');
+        const newChatButton = document.getElementById('newChatButton');
+        const welcomeMessageContainer = document.getElementById('welcome-message');
+
+        // IMPORTANT: The API key is intentionally left blank.
+        // The execution environment will automatically provide it.
+        const apiKey = ""; 
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+        
+        let chatHistory = [];
+
+        /**
+         * Makes an API call to the Gemini model with exponential backoff.
+         * @param {object} payload - The payload to send to the API.
+         * @param {number} maxRetries - The maximum number of retries.
+         * @returns {Promise<object>} - The JSON response from the API.
+         */
+        async function fetchWithBackoff(payload, maxRetries = 5) {
+            let delay = 1000; // start with 1 second
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        return await response.json();
+                    } else if (response.status === 429) { // Throttling
+                        // wait and retry
+                    } else {
+                        // For other errors, throw and stop retrying
+                        throw new Error(`API request failed with status ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error; // rethrow last error
+                }
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2; // double the delay for the next retry
+            }
+        }
+
+        /**
+         * Appends a message to the chat container.
+         * @param {string} sender - 'user' or 'gemini'.
+         * @param {string} text - The message text.
+         */
+        const appendMessage = (sender, text) => {
+            const messageDiv = document.createElement('div');
+            if (sender === 'user') {
+                messageDiv.className = 'flex justify-end mb-4';
+                messageDiv.innerHTML = `
+                    <div class="bg-blue-600 text-white rounded-lg p-3 max-w-lg break-words">
+                        <p>${text}</p>
+                    </div>
+                    <img src="https://placehold.co/32x32/7E57C2/FFFFFF?text=U" alt="User Avatar" class="rounded-full ml-3 h-8 w-8 flex-shrink-0">
+                `;
+            } else {
+                messageDiv.className = 'flex mb-4';
+                // Sanitize HTML to prevent XSS, just in case the model returns HTML
+                const sanitizedText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                messageDiv.innerHTML = `
+                    <div class="gemini-icon mr-3 flex-shrink-0">
+                        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2.25C6.071 2.25 1.5 6.821 1.5 12.75C1.5 18.679 6.071 23.25 12 23.25C17.929 23.25 22.5 18.679 22.5 12.75C22.5 6.821 17.929 2.25 12 2.25ZM12 20.25C7.998 20.25 4.5 16.752 4.5 12.75C4.5 8.748 7.998 5.25 12 5.25C16.002 5.25 19.5 8.748 19.5 12.75C19.5 16.752 16.002 20.25 12 20.25Z" fill="url(#paint0_linear_1_2)"/>
+                            <path d="M12 7.5C9.243 7.5 7.5 9.743 7.5 12.5C7.5 15.257 9.243 17.5 12 17.5C14.757 17.5 16.5 15.257 16.5 12.5C16.5 9.743 14.757 7.5 12 7.5Z" fill="url(#paint1_linear_1_2)"/>
+                            <defs>
+                                <linearGradient id="paint0_linear_1_2" x1="1.5" y1="12.75" x2="22.5" y2="12.75" gradientUnits="userSpaceOnUse"><stop stop-color="#4285F4"/><stop offset="1" stop-color="#9B72CB"/></linearGradient>
+                                <linearGradient id="paint1_linear_1_2" x1="7.5" y1="12.5" x2="16.5" y2="12.5" gradientUnits="userSpaceOnUse"><stop stop-color="#D96570"/><stop offset="1" stop-color="#F2A60C"/></linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-3 max-w-lg break-words">
+                        <p>${sanitizedText}</p>
+                    </div>
+                `;
+            }
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        };
+        
+        /**
+         * Handles sending a message, calling the Gemini API.
+         */
+        const handleSend = async () => {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            if (welcomeMessageContainer) {
+                welcomeMessageContainer.style.display = 'none';
+            }
+            suggestedPromptsContainer.innerHTML = ''; // Clear suggestions
+
+            appendMessage('user', message);
+            userInput.value = '';
+            
+            // Add user message to history
+            chatHistory.push({ role: "user", parts: [{ text: message }] });
+
+            // Display typing indicator
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'flex items-center mb-4';
+            typingIndicator.id = 'typing-indicator';
+            typingIndicator.innerHTML = `
+                <div class="gemini-icon mr-3 flex-shrink-0">
+                    <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.25C6.071 2.25 1.5 6.821 1.5 12.75C1.5 18.679 6.071 23.25 12 23.25C17.929 23.25 22.5 18.679 22.5 12.75C22.5 6.821 17.929 2.25 12 2.25ZM12 20.25C7.998 20.25 4.5 16.752 4.5 12.75C4.5 8.748 7.998 5.25 12 5.25C16.002 5.25 19.5 8.748 19.5 12.75C19.5 16.752 16.002 20.25 12 20.25Z" fill="url(#paint0_linear_1_2)"/><path d="M12 7.5C9.243 7.5 7.5 9.743 7.5 12.5C7.5 15.257 9.243 17.5 12 17.5C14.757 17.5 16.5 15.257 16.5 12.5C16.5 9.743 14.757 7.5 12 7.5Z" fill="url(#paint1_linear_1_2)"/><defs><linearGradient id="paint0_linear_1_2" x1="1.5" y1="12.75" x2="22.5" y2="12.75" gradientUnits="userSpaceOnUse"><stop stop-color="#4285F4"/><stop offset="1" stop-color="#9B72CB"/></linearGradient><linearGradient id="paint1_linear_1_2" x1="7.5" y1="12.5" x2="16.5" y2="12.5" gradientUnits="userSpaceOnUse"><stop stop-color="#D96570"/><stop offset="1" stop-color="#F2A60C"/></linearGradient></defs></svg>
+                </div>
+                <div class="loader"></div>
+            `;
+            chatContainer.appendChild(typingIndicator);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            try {
+                const payload = { contents: chatHistory };
+                const result = await fetchWithBackoff(payload);
+                
+                let geminiText = "Sorry, I couldn't process that. Please try again.";
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    geminiText = result.candidates[0].content.parts[0].text;
+                }
+                
+                // Add model response to history
+                chatHistory.push({ role: "model", parts: [{ text: geminiText }] });
+                
+                appendMessage('gemini', geminiText);
+
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                appendMessage('gemini', "An error occurred. Please check the console for details.");
+            } finally {
+                // Remove typing indicator
+                document.getElementById('typing-indicator')?.remove();
+            }
+        };
+
+        /**
+         * Fetches and displays suggested prompts from the Gemini API.
+         */
+        const handleSuggestPrompts = async () => {
+            suggestPromptsButton.disabled = true;
+            suggestedPromptsContainer.innerHTML = `<div class="loader mx-auto"></div>`;
+
+            try {
+                const prompt = "Suggest three creative and interesting prompts for a conversation with an AI, as a JSON array of strings. For example: [\"prompt1\", \"prompt2\", \"prompt3\"]";
+                const payload = {
+                    contents: [{ role: "user", parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "ARRAY",
+                            items: { type: "STRING" }
+                        }
+                    }
+                };
+                
+                const result = await fetchWithBackoff(payload);
+                
+                let prompts = ["Explain quantum computing in simple terms.", "What are some recipes I can make with chicken, rice, and spinach?", "Write a short story about a robot who discovers music."]; // Fallback prompts
+                if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts[0]) {
+                    const parsedJson = JSON.parse(result.candidates[0].content.parts[0].text);
+                    if (Array.isArray(parsedJson) && parsedJson.length > 0) {
+                        prompts = parsedJson;
+                    }
+                }
+                
+                suggestedPromptsContainer.innerHTML = ''; // Clear loader
+                prompts.forEach(p => {
+                    const button = document.createElement('button');
+                    button.className = 'bg-gray-700 hover:bg-gray-600 text-sm text-white font-medium py-2 px-3 rounded-full transition-colors';
+                    button.textContent = p;
+                    button.onclick = () => {
+                        userInput.value = p;
+                        handleSend();
+                    };
+                    suggestedPromptsContainer.appendChild(button);
+                });
+
+            } catch (error) {
+                console.error("Error fetching suggestions:", error);
+                suggestedPromptsContainer.innerHTML = `<p class="text-xs text-red-400">Could not load suggestions.</p>`;
+            } finally {
+                suggestPromptsButton.disabled = false;
+            }
+        };
+
+        /**
+         * Starts a new chat session.
+         */
+        const handleNewChat = () => {
+            chatContainer.innerHTML = ''; // Clear visual chat
+            chatContainer.appendChild(welcomeMessageContainer); // Add welcome message back
+            welcomeMessageContainer.style.display = 'block';
+            chatHistory = []; // Clear conversation history
+            suggestedPromptsContainer.innerHTML = ''; // Clear suggestions
+            userInput.value = '';
+        };
+
+        // Event Listeners
+        sendButton.addEventListener('click', handleSend);
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+            }
+        });
+        suggestPromptsButton.addEventListener('click', handleSuggestPrompts);
+        newChatButton.addEventListener('click', handleNewChat);
+
+    </script>
+</body>
+</html>
