@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Text Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 md:p-12 lg:p-16 flex items-center justify-center min-h-screen">
+
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl p-6 sm:p-10 border-4 border-gray-100">
+
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">Gemini Text Generator</h1>
+            <p class="text-gray-500 mt-2">Enter a prompt and let Gemini 2.5 Flash generate text for you.</p>
+        </header>
+
+        <!-- Input Section -->
+        <div class="mb-6">
+            <label for="prompt" class="block text-gray-700 font-medium mb-2">Your Prompt</label>
+            <textarea id="prompt" rows="6" class="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 resize-none" placeholder="e.g., Write a short story about a brave knight and a fire-breathing dragon."></textarea>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-8">
+            <button id="generateBtn" class="w-full sm:w-auto px-8 py-3 bg-indigo-600 text-white font-semibold rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-indigo-400">
+                Generate Text
+            </button>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="hidden flex items-center justify-center mb-6">
+            <div class="animate-spin rounded-full h-8 w-8 border-4 border-t-4 border-blue-500 border-t-blue-700"></div>
+            <span class="ml-4 text-gray-500">Generating response...</span>
+        </div>
+
+        <!-- Output Section -->
+        <div>
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Generated Response</h2>
+            <div id="outputContainer" class="bg-gray-50 p-6 rounded-xl border border-gray-200 min-h-[150px] overflow-auto">
+                <p id="output" class="text-gray-700 leading-relaxed"></p>
+                <p id="placeholder" class="text-gray-400 italic">Your generated text will appear here.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Set up the API call and UI logic
+        const promptTextarea = document.getElementById('prompt');
+        const generateBtn = document.getElementById('generateBtn');
+        const outputContainer = document.getElementById('outputContainer');
+        const output = document.getElementById('output');
+        const placeholder = document.getElementById('placeholder');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        // Main function to handle the text generation process
+        async function generateText() {
+            const userPrompt = promptTextarea.value.trim();
+
+            if (!userPrompt) {
+                output.textContent = "Please enter a prompt to get started.";
+                placeholder.classList.add('hidden');
+                return;
+            }
+
+            // Show loading state and clear previous output
+            generateBtn.disabled = true;
+            loadingIndicator.classList.remove('hidden');
+            output.textContent = '';
+            placeholder.classList.add('hidden');
+
+            // API configuration
+            const apiKey = ""; // Canvas will automatically provide the key
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            const chatHistory = [{
+                role: "user",
+                parts: [{
+                    text: userPrompt
+                }]
+            }];
+
+            const payload = {
+                contents: chatHistory
+            };
+
+            // Use exponential backoff for API calls
+            let response;
+            let retries = 0;
+            const maxRetries = 5;
+            const baseDelay = 1000; // 1 second
+
+            while (retries < maxRetries) {
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    // If the response is OK, break the retry loop
+                    if (response.ok) {
+                        break;
+                    } else if (response.status === 429) {
+                        // Too many requests, retry with backoff
+                        const delay = baseDelay * Math.pow(2, retries);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        retries++;
+                    } else {
+                        // Other error, re-throw to be caught
+                        throw new Error(`API returned status ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error('Fetch failed:', error);
+                    const delay = baseDelay * Math.pow(2, retries);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    retries++;
+                }
+            }
+            
+            // Handle the final response
+            if (response && response.ok) {
+                try {
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        
+                        const text = result.candidates[0].content.parts[0].text;
+                        output.textContent = text;
+                        placeholder.classList.add('hidden');
+                    } else {
+                        output.textContent = "Sorry, I couldn't generate a response. Please try again.";
+                        placeholder.classList.add('hidden');
+                    }
+                } catch (jsonError) {
+                    output.textContent = "An error occurred while parsing the response. Please check the console for details.";
+                    placeholder.classList.add('hidden');
+                    console.error('JSON parsing failed:', jsonError);
+                }
+            } else {
+                output.textContent = "Failed to connect to the API after several retries. Please check your network connection.";
+                placeholder.classList.add('hidden');
+                console.error('Final API request failed.');
+            }
+
+            // Re-enable the button and hide the loading indicator
+            generateBtn.disabled = false;
+            loadingIndicator.classList.add('hidden');
+        }
+
+        // Add event listener to the button
+        generateBtn.addEventListener('click', generateText);
+        
+        // Add event listener for Enter key in the textarea
+        promptTextarea.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                generateText();
+            }
+        });
+
+    </script>
+</body>
+</html>
